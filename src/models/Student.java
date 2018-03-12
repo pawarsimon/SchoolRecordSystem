@@ -6,10 +6,12 @@
 package models;
 
 
+import com.mysql.jdbc.Connection;
 import com.mysql.jdbc.PreparedStatement;
 import java.io.File;
 import java.sql.Date;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.time.LocalDate;
 
 /**
@@ -96,27 +98,48 @@ public class Student {
      * @return 
      */
     
-    public void connectToDB(){
+    public void connectToDB() throws SQLException{
         Connection conn =  null;
         PreparedStatement preparedStatement = null;
          
         try
         {
             //1.Connect to the database
-            conn = DriverManager.getConnection("jdbc:mysql://sql.computerstudi.es:3306/gc200361569", "gc200361569", "n*-eSANP");
+            conn = (Connection) DriverManager.getConnection("jdbc:mysql://sql.computerstudi.es:3306/gc200361569", "gc200361569", "n*-eSANP");
             
             //2.String that holds the query
             String sql = "INSERT INTO students(firstName, lastName, studentNumber, dateOfBirth, imageFile)" 
                             + "VALUES(?,?,?,?,?)";
             
             //3. prepare the sql query
-            preparedStatement = conn.preparedStatement(sql);
+            preparedStatement = (PreparedStatement) conn.prepareStatement(sql);
             
             //4. Date to birthday
-            Date db = Date.valueOf(dateOfBirth);
+            Date db = Date.valueOf(dateOfBirth); 
+            
+            //Bind value parameters
+            preparedStatement.setString(1, firstName);
+            preparedStatement.setString(2,lastName);
+            preparedStatement.setString(3,studentNumber);
+            preparedStatement.setDate(4,db);
+            preparedStatement.setString(5,imageFile.getName());
+            
+            preparedStatement.executeUpdate();
         }
         
-        catch
+        catch(Exception e)
+        {
+            System.err.println(e.getMessage());
+        }
+        
+        finally
+        {
+            if(preparedStatement != null)
+                preparedStatement.close();
+            
+            if (conn != null)
+                conn.close();
+        }
     }
     public String toString(){
         return String.format("s% s% %s", firstName, lastName, studentNumber);
